@@ -1,0 +1,195 @@
+<!DOCTYPE HTML>
+<!--
+ * Runeclick
+ * http://qubodup.net/
+ * Copyright 2014, Iwan Gabovitch <qubodup@gmail.com>
+ * Licensed under the MIT or GPL Version 2 licenses.
+ *
+ * Copyright (C) 2014 Iwan Gabovitch <qubodup@gmail.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+-->
+<html>
+<head>
+  <title>Runeclick</title>
+  <meta property="og:title" content="RuneClick - simple HTML5 sound test game" />
+  <meta property="og:type" content="game" />
+  <meta property="og:url" content="http://qubodup.github.com/runeclick/" />
+  <meta property="og:image" content="http://qubodup.github.com/runeclick/runeclick.jpg" />
+  <link rel="shortcut icon" href="favicon.ico" />
+  <style>
+body {
+  margin: 0px;
+  padding: 0px;
+  text-align: center;
+}
+canvas {
+  border: none;
+  background-image: url("runes.jpg");
+}
+</style>
+</head>
+<body onmousedown="return false;">
+<canvas width="912" height="489"></canvas>
+<script type="text/javascript">
+(function (event) {
+
+  // load
+  runes = [
+    [486,  28,  64,  97, false, new Image()],
+    [372, 195, 123,  95, false, new Image()],
+    [729, 346, 109, 136, false, new Image()]
+  ];
+
+  var imgTut = new Image();
+  var imgWin = new Image();
+  var imgOhno = new Image();
+  var imgVamp = new Image();
+
+  /* I HATE JAVASCRIPT I HATE BROWSERS I HATE HTML I HATE CSS */
+  var canvas = document.getElementsByTagName("canvas")[0];
+  var ctx = canvas.getContext('2d');
+
+  // asset list for loading before playing
+  var assetList = [];
+  for (var i = 0; i < runes.length; i++ ) {
+    assetList.push(runes[i][5]);
+  }
+  assetList.push(imgTut);
+  assetList.push(imgWin);
+  assetList.push(imgOhno);
+  assetList.push(imgVamp);
+
+  // initialization after images are loaded event listeners
+  var assetCount = 0;
+  for (var i = 0; i < assetList.length; i++) {
+    assetList[i].addEventListener('load', function() {
+      assetCount += 1;
+      if (assetCount == assetList.length) {
+        init();
+      }
+    });
+  };
+
+  for (var i = 0; i < runes.length; i++ ) {
+    runes[i][5].src = "rune" + (i+1) + ".png";
+  }
+  imgTut.src = "runetut.png";
+  imgWin.src = "runewin.png";
+  imgOhno.src = "runeohno.png";
+  imgVamp.src = "runevampireviking.png";
+
+  sndVamp = new Audio("vamp.ogg");
+
+  function playSound() { var sound = new Audio("rune.ogg"); sound.play(); }
+  /* I HATE JAVASCRIPT I HATE BROWSERS I HATE HTML I HATE CSS */
+
+  function init() {
+
+    ctx.drawImage(
+      imgTut, //image
+      0, 0, // sx, sy
+      canvas.width, canvas.height, // sw, sh
+      0, 0, // dx, dy
+      canvas.width, canvas.height // dw, dh
+    );
+
+    runes[0][5].src = "rune1.png";
+
+    var body = document.getElementsByTagName("body")[0];
+    var revealCount = 0;
+
+    body.addEventListener("click", function (e) {
+
+      // coordinates. did I mention I hate javascript?
+      var x;
+      var y;
+      if (e.pageX || e.pageY) { 
+        x = e.pageX;
+        y = e.pageY;
+      }
+      else { 
+        x = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft; 
+        y = e.clientY + document.body.scrollTop + document.documentElement.scrollTop; 
+      } 
+      x -= canvas.offsetLeft;
+      y -= canvas.offsetTop;
+
+      // actual event handling
+      for (var i = 0; i < runes.length; i++ ) {
+        if ( !runes[i][4] &&
+          x > runes[i][0] &&
+          y > runes[i][1] &&
+          x < runes[i][0]+runes[i][2] &&
+          y < runes[i][1]+runes[i][3]
+        ) {
+          playSound();
+          runes[i][4] = true;
+
+          // since nothing moves or overlaps, let's just draw on top of everything
+          ctx.drawImage(
+            runes[i][5], //image
+            0, 0, // sx, sy
+            canvas.width, canvas.height, // sw, sh
+            0, 0, // dx, dy
+            canvas.width, canvas.height // dw, dh
+          );
+          revealCount += 1;
+          if ( revealCount == 3 ) {
+            ctx.drawImage(
+              imgWin, //image
+              0, 0, // sx, sy
+              canvas.width, canvas.height, // sw, sh
+              0, 0, // dx, dy
+              canvas.width, canvas.height // dw, dh
+            );
+            setTimeout( function() {
+              ctx.drawImage(
+                imgOhno, //image
+                0, 0, // sx, sy
+                canvas.width, canvas.height, // sw, sh
+                0, 0, // dx, dy
+                canvas.width, canvas.height // dw, dh
+              );
+              ctx.drawImage(
+                imgVamp, //image
+                0, 0, // sx, sy
+                canvas.width, canvas.height, // sw, sh
+                0, 0, // dx, dy
+                canvas.width, canvas.height // dw, dh
+              );
+              sndVamp.play();
+            }, 2000);
+          }
+        }
+      }
+    }, false);
+
+  }
+
+}());
+  </script>
+<p>Doesn't work in your browser? Have no access to Firefox or Chrome?... Uh... Well, <a href="http://youtu.be/cder6tGdkCA">here's a video</a>.</p>
+<p>Credits by links: <a href="http://commons.wikimedia.org/wiki/File:A_stone_with_runes_at_shirvanshahs_palace_baku_azerbaijan.jpg">photo</a>,
+<a href="http://openclipart.org/detail/189924/">clipart1</a>,
+<a href="http://openclipart.org/detail/189926/">clipart2</a>,
+<a href="http://audiojungle.net/item/magical-rune/6527487?ref=qubodup">sound1</a>,
+<a href="http://audiojungle.net/item/monster-scream/6526130?ref=qubodup">sound2</a></p>
+</body>
+</html>
